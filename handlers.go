@@ -11,12 +11,13 @@ import (
 
 type APIserver struct {
 	Addr string
+	store  storage
 }
 type APIError struct {
 	Error string
 }
 
-// func signature of the api functions
+// default func signature
 type APIFunc func(http.ResponseWriter, *http.Request) error
 
 // modifies to correct function signature needed by HandleFunc
@@ -37,9 +38,10 @@ func writeJSON(w http.ResponseWriter, status int, value any) error {
 
 }
 
-func newAPIServer(Addr string) *APIserver {
+func newAPIServer(Addr string , store storage) *APIserver {
 	return &APIserver{
 		Addr: Addr,
+		store: store,
 	}
 }
 func (s *APIserver) Run() {

@@ -1,10 +1,21 @@
 package main
 
+import (
+	"fmt"
+	"log"
+)
+
 //"net/http"
 
 func main() {
 
-	server := newAPIServer(":3000")
+    store,err := newPostgresStore()
+	if(err !=nil){
+		log.Fatal(err)
+	}
+
+   fmt.Printf("%v",store)
+	server := newAPIServer(":3000",store)
 
 	server.Run()
 }

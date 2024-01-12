@@ -48,7 +48,7 @@ func newAPIServer(Addr string, store storage) *APIserver {
 func (s *APIserver) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount))
-	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccount))
+	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccountByID))
 	log.Printf("Server is listening on port %v", s.Addr)
 	err := http.ListenAndServe(s.Addr, router)
 	if err != nil {
@@ -71,8 +71,15 @@ func (s *APIserver) handleAccount(w http.ResponseWriter, r *http.Request) error 
 	}
 
 }
-
 func (s *APIserver) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
+	accounts, err := s.store.getAccounts()
+	if err != nil {
+		return err
+	}
+	return writeJSON(w, http.StatusOK, accounts)
+}
+
+func (s *APIserver) handleGetAccountByID(w http.ResponseWriter, r *http.Request) error {
 	//returns a map
 	id := mux.Vars(r)["id"]
 	account := newAccount("Anthony", "Mbeka")
@@ -84,19 +91,20 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	//read request body and store it in params
 	params := createAccountRequest{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&params)
-	if err != nil {
+	if err := decoder.Decode(&params); err != nil {
 		return err
 	}
-	
-	if(params.FirstName=="" || params.LastName==""){
+
+	if params.FirstName == "" || params.LastName == "" {
 		return errors.New("fields cannot be empty")
 	}
 	//newAccount returns a reference to an account struct that is then passed to createAccount()
 	account := newAccount(params.FirstName, params.LastName)
-	s.store.createAccount(account)
-	log.Println("Account created")
-	return nil
+	if err := s.store.createAccount(account); err != nil {
+		return err
+	}
+
+	return writeJSON(w, http.StatusCreated, account)
 }
 
 func (s *APIserver) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {

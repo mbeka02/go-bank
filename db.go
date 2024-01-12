@@ -32,6 +32,7 @@ func newPostgresStore() (*postgresStore, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	//check if conn is still alive
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
@@ -42,8 +43,26 @@ func newPostgresStore() (*postgresStore, error) {
 
 }
 
+func (s *postgresStore) createAccountTable() error {
+	query := `CREATE TABLE IF NOT EXISTS account (
+		id serial primary key,
+		LastName varchar(255),
+		FirstName varchar(255),
+		Number serial,
+		balance bigint,
+		created_at timestamp
+	); `
+	_, err := s.db.Exec(query)
+
+	return err
+}
+
 func (s *postgresStore) createAccount(*Account) error {
-	return nil
+
+	query := `INSERT INTO account (id,FirstName,LastName,Number,balance,created_at) VALUES VALUES($1,$2,$3,$4,$5,$6);`
+	_, err := s.db.Exec(query)
+
+	return err
 }
 func (s *postgresStore) updateAccount(*Account) error {
 	return nil
@@ -51,6 +70,6 @@ func (s *postgresStore) updateAccount(*Account) error {
 func (s *postgresStore) deleteAccount(int) error {
 	return nil
 }
-func (s *postgresStore) getAccountByID(int) (*Account,error) {
-	return &Account{},nil
+func (s *postgresStore) getAccountByID(int) (*Account, error) {
+	return &Account{}, nil
 }

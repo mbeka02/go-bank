@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,8 +11,8 @@ import (
 )
 
 type APIserver struct {
-	Addr string
-	store  storage
+	Addr  string
+	store storage
 }
 type APIError struct {
 	Error string
@@ -38,9 +39,9 @@ func writeJSON(w http.ResponseWriter, status int, value any) error {
 
 }
 
-func newAPIServer(Addr string , store storage) *APIserver {
+func newAPIServer(Addr string, store storage) *APIserver {
 	return &APIserver{
-		Addr: Addr,
+		Addr:  Addr,
 		store: store,
 	}
 }
@@ -73,13 +74,28 @@ func (s *APIserver) handleAccount(w http.ResponseWriter, r *http.Request) error 
 
 func (s *APIserver) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
 	//returns a map
-	id:=mux.Vars(r)["id"]
+	id := mux.Vars(r)["id"]
 	account := newAccount("Anthony", "Mbeka")
 	fmt.Println(id)
-	return writeJSON(w, http.StatusOK, account )
+	return writeJSON(w, http.StatusOK, account)
 }
 
 func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
+	//read request body and store it in params
+	params := createAccountRequest{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&params)
+	if err != nil {
+		return err
+	}
+	
+	if(params.FirstName=="" || params.LastName==""){
+		return errors.New("fields cannot be empty")
+	}
+	//newAccount returns a reference to an account struct that is then passed to createAccount()
+	account := newAccount(params.FirstName, params.LastName)
+	s.store.createAccount(account)
+	log.Println("Account created")
 	return nil
 }
 

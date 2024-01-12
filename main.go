@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -9,13 +8,17 @@ import (
 
 func main() {
 
-    store,err := newPostgresStore()
-	if(err !=nil){
+	store, err := newPostgresStore()
+	if err != nil {
 		log.Fatal(err)
 	}
 
-   fmt.Printf("%v",store)
-	server := newAPIServer(":3000",store)
+	if err := store.createAccountTable(); err != nil {
+		log.Fatal(err)
+	}
+
+	//fmt.Printf("%v",store)
+	server := newAPIServer(":3000", store)
 
 	server.Run()
 }

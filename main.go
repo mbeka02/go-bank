@@ -4,16 +4,16 @@ import (
 	"log"
 )
 
-//"net/http"
+
 
 func main() {
 
-	store, err := newPostgresStore()
+	store, err := NewPostgresStore()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := store.createAccountTable(); err != nil {
+	if err := store.CreateAccountTable(); err != nil {
 		log.Fatal(err)
 	}
 

@@ -72,7 +72,7 @@ func (s *APIserver) handleAccount(w http.ResponseWriter, r *http.Request) error 
 
 }
 func (s *APIserver) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
-	accounts, err := s.store.getAccounts()
+	accounts, err := s.store.GetAccounts()
 	if err != nil {
 		return err
 	}
@@ -89,18 +89,18 @@ func (s *APIserver) handleGetAccountByID(w http.ResponseWriter, r *http.Request)
 
 func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
 	//read request body and store it in params
-	params := createAccountRequest{}
+	request := createAccountRequest{}
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&params); err != nil {
+	if err := decoder.Decode(&request); err != nil {
 		return err
 	}
 
-	if params.FirstName == "" || params.LastName == "" {
+	if request.FirstName == "" || request.LastName == "" {
 		return errors.New("fields cannot be empty")
 	}
 	//newAccount returns a reference to an account struct that is then passed to createAccount()
-	account := newAccount(params.FirstName, params.LastName)
-	if err := s.store.createAccount(account); err != nil {
+	account := newAccount(request.FirstName, request.LastName)
+	if err := s.store.CreateAccount(account); err != nil {
 		return err
 	}
 

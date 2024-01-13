@@ -11,17 +11,17 @@ import (
 )
 
 type storage interface {
-	createAccount(*Account) error
-	updateAccount(*Account) error
-	getAccounts() ([]*Account, error)
-	deleteAccount(int) error
-	getAccountByID(int) (*Account, error)
+	CreateAccount(*Account) error
+	UpdateAccount(*Account) error
+	GetAccounts() ([]*Account, error)
+	DeleteAccount(int) error
+	GetAccountByID(int) (*Account, error)
 }
-type postgresStore struct {
+type PostgresStore struct {
 	db *sql.DB
 }
 
-func newPostgresStore() (*postgresStore, error) {
+func NewPostgresStore() (*PostgresStore, error) {
 	godotenv.Load(".env")
 	connStr := os.Getenv("connStr")
 
@@ -38,13 +38,13 @@ func newPostgresStore() (*postgresStore, error) {
 		return nil, err
 	}
 
-	return &postgresStore{
+	return &PostgresStore{
 		db: db,
 	}, nil
 
 }
-
-func (s *postgresStore) createAccountTable() error {
+//Yes I know I can just use an ORM but I want to write raw SQL for this project
+func (s *PostgresStore) CreateAccountTable() error {
 	query := `CREATE TABLE IF NOT EXISTS account (
 		id serial primary key,
 		LastName varchar(255),
@@ -58,7 +58,7 @@ func (s *postgresStore) createAccountTable() error {
 
 }
 
-func (s *postgresStore) createAccount(acc *Account) error {
+func (s *PostgresStore) CreateAccount(acc *Account) error {
 
 	query := `INSERT INTO account 
 	(FirstName,LastName,Number,balance,created_at) 
@@ -76,7 +76,7 @@ func (s *postgresStore) createAccount(acc *Account) error {
 	return nil
 
 }
-func (s *postgresStore) getAccounts() ([]*Account, error) {
+func (s *PostgresStore) GetAccounts() ([]*Account, error) {
 	query := ` SELECT * FROM account`
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -94,12 +94,23 @@ func (s *postgresStore) getAccounts() ([]*Account, error) {
 	}
 	return accounts, nil
 }
-func (s *postgresStore) updateAccount(*Account) error {
+func (s *PostgresStore) UpdateAccount(*Account) error {
 	return nil
 }
-func (s *postgresStore) deleteAccount(int) error {
+func (s *PostgresStore) DeleteAccount(int) error {
 	return nil
 }
-func (s *postgresStore) getAccountByID(int) (*Account, error) {
-	return &Account{}, nil
+func (s *PostgresStore) GetAccountByID(accId int) (*Account, error) {
+	query:=`SELECT * FROM account WHERE id=$1 `
+	resp,err := s.db.Query(query,accId)
+	if(err != nil){
+          return nil,err
+	}
+	account:=new(Account) //or &Account{}
+	err=resp.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
+	if(err != nil){
+		return nil,err
+  }
+
+	return account, nil
 }

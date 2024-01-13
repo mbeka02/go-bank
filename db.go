@@ -43,7 +43,8 @@ func NewPostgresStore() (*PostgresStore, error) {
 	}, nil
 
 }
-//Yes I know I can just use an ORM but I want to write raw SQL for this project
+
+// Yes I know I can just use an ORM but I want to write raw SQL for this project
 func (s *PostgresStore) CreateAccountTable() error {
 	query := `CREATE TABLE IF NOT EXISTS account (
 		id serial primary key,
@@ -85,6 +86,7 @@ func (s *PostgresStore) GetAccounts() ([]*Account, error) {
 	accounts := []*Account{}
 	for rows.Next() {
 		account := new(Account)
+		//copy values in the current row to values pointed at
 		err := rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
 		if err != nil {
 			return nil, err
@@ -101,16 +103,19 @@ func (s *PostgresStore) DeleteAccount(int) error {
 	return nil
 }
 func (s *PostgresStore) GetAccountByID(accId int) (*Account, error) {
-	query:=`SELECT * FROM account WHERE id=$1 `
-	resp,err := s.db.Query(query,accId)
-	if(err != nil){
-          return nil,err
+	query := `SELECT * FROM account WHERE id=$1 `
+	rows, err := s.db.Query(query, accId)
+	if err != nil {
+		return nil, err
 	}
-	account:=new(Account) //or &Account{}
-	err=resp.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
-	if(err != nil){
-		return nil,err
-  }
+	account := new(Account) //or &Account{}
+	for rows.Next() {
+
+	err = rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+}
 
 	return account, nil
 }

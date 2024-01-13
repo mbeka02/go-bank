@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -82,8 +83,15 @@ func (s *APIserver) handleGetAccount(w http.ResponseWriter, r *http.Request) err
 func (s *APIserver) handleGetAccountByID(w http.ResponseWriter, r *http.Request) error {
 	//returns a map
 	id := mux.Vars(r)["id"]
-	account := newAccount("Anthony", "Mbeka")
-	fmt.Println(id)
+	//refactor this
+	intVar, err := strconv.Atoi(id)
+	if(err !=nil){
+		return  err//errors.New("the id value entered is not a valid number")
+	}
+	account,err:=s.store.GetAccountByID(intVar)
+	if(err !=nil){
+		return err
+	}
 	return writeJSON(w, http.StatusOK, account)
 }
 

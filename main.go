@@ -4,8 +4,6 @@ import (
 	"log"
 )
 
-
-
 func main() {
 
 	store, err := NewPostgresStore()

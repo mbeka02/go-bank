@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 
@@ -85,12 +86,11 @@ func (s *PostgresStore) GetAccounts() ([]*Account, error) {
 	}
 	accounts := []*Account{}
 	for rows.Next() {
-		account := new(Account)
-		//copy values in the current row to values pointed at
-		err := rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
+		account, err := scanAccountRow(rows)
 		if err != nil {
 			return nil, err
 		}
+
 		accounts = append(accounts, account)
 
 	}
@@ -99,8 +99,10 @@ func (s *PostgresStore) GetAccounts() ([]*Account, error) {
 func (s *PostgresStore) UpdateAccount(*Account) error {
 	return nil
 }
-func (s *PostgresStore) DeleteAccount(int) error {
-	return nil
+func (s *PostgresStore) DeleteAccount(accId int) error {
+	query := `DELETE FROM account WHERE id=$1 `
+	_, err := s.db.Query(query, accId)
+	return err
 }
 func (s *PostgresStore) GetAccountByID(accId int) (*Account, error) {
 	query := `SELECT * FROM account WHERE id=$1 `
@@ -108,14 +110,20 @@ func (s *PostgresStore) GetAccountByID(accId int) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := new(Account) //or &Account{}
+
 	for rows.Next() {
 
-	err = rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
-	if err != nil {
-		return nil, err
+		return scanAccountRow(rows)
 	}
+	return nil, fmt.Errorf("unable to find any record with id : %v", accId)
+
 }
 
-	return account, nil
+func scanAccountRow(rows *sql.Rows) (*Account, error) {
+	account := new(Account) //or &Account{}
+
+	//copy values in the current row to values pointed at
+	err := rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
+	return account, err
+
 }

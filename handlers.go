@@ -16,7 +16,7 @@ type APIserver struct {
 	store storage
 }
 type APIError struct {
-	Error string
+	Error string `json:"error"`
 }
 
 // default func signature
@@ -64,8 +64,30 @@ func (s *APIserver) handleAccount(w http.ResponseWriter, r *http.Request) error 
 		return s.handleGetAccount(w, r)
 	case "POST":
 		return s.handleCreateAccount(w, r)
+
+	default:
+		return fmt.Errorf("method is not supported : %s", r.Method)
+
+	}
+
+}
+
+func (s *APIserver) handleGetAccountByID(w http.ResponseWriter, r *http.Request) error {
+	switch r.Method {
+	case "GET":
+		intVar, err := getIDFromRequest(r)
+		if err != nil {
+			return err //errors.New("the id value entered is not a valid number")
+		}
+		account, err := s.store.GetAccountByID(intVar)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusOK, account)
+
 	case "DELETE":
-		return s.handleDeleteAccount(w, r)
+		return s.handleDeleteAccountByID(w, r)
+
 	default:
 		return fmt.Errorf("method is not supported : %s", r.Method)
 
@@ -80,20 +102,6 @@ func (s *APIserver) handleGetAccount(w http.ResponseWriter, r *http.Request) err
 	return writeJSON(w, http.StatusOK, accounts)
 }
 
-func (s *APIserver) handleGetAccountByID(w http.ResponseWriter, r *http.Request) error {
-	//returns a map
-	id := mux.Vars(r)["id"]
-	//refactor this
-	intVar, err := strconv.Atoi(id)
-	if(err !=nil){
-		return  err//errors.New("the id value entered is not a valid number")
-	}
-	account,err:=s.store.GetAccountByID(intVar)
-	if(err !=nil){
-		return err
-	}
-	return writeJSON(w, http.StatusOK, account)
-}
 
 func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
 	//read request body and store it in params
@@ -115,10 +123,28 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	return writeJSON(w, http.StatusCreated, account)
 }
 
-func (s *APIserver) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
+func (s *APIserver) handleDeleteAccountByID(w http.ResponseWriter, r *http.Request) error {
+	fmt.Println("ran")
+	intVar, err := getIDFromRequest(r)
+	if err != nil {
+		return err //errors.New("the id value entered is not a valid number")
+	}
+	err = s.store.DeleteAccount(intVar)
+	if err != nil {
+		return err
+	}
+	response := map[string]int{"deleted": intVar}
+	return writeJSON(w, http.StatusOK, response)
 }
 
 func (s *APIserver) handleTransfer(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+func getIDFromRequest(r *http.Request) (int, error) {
+	//returns a map
+	id := mux.Vars(r)["id"]
+	//refactor this , a more useful error value needs to be returned
+	return strconv.Atoi(id)
+
 }

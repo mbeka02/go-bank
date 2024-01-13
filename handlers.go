@@ -50,6 +50,7 @@ func (s *APIserver) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount))
 	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccountByID))
+	router.HandleFunc("/transfer", makeHTTPHandleFunc(s.handleTransfer))
 	log.Printf("Server is listening on port %v", s.Addr)
 	err := http.ListenAndServe(s.Addr, router)
 	if err != nil {
@@ -124,7 +125,7 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *APIserver) handleDeleteAccountByID(w http.ResponseWriter, r *http.Request) error {
-	fmt.Println("ran")
+	
 	intVar, err := getIDFromRequest(r)
 	if err != nil {
 		return err //errors.New("the id value entered is not a valid number")
@@ -138,7 +139,17 @@ func (s *APIserver) handleDeleteAccountByID(w http.ResponseWriter, r *http.Reque
 }
 
 func (s *APIserver) handleTransfer(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	if(r.Method=="POST"){
+		transferRequest:=new(TransferRequest)
+	if err :=json.NewDecoder(r.Body).Decode(transferRequest);(err !=nil){
+		return err
+	}
+	defer r.Body.Close()
+	return writeJSON(w,http.StatusOK,transferRequest)
+
+	}
+	return fmt.Errorf("method is not supported : %s", r.Method)
+	
 }
 
 func getIDFromRequest(r *http.Request) (int, error) {

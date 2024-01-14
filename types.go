@@ -10,8 +10,8 @@ type createAccountRequest struct {
 	LastName  string `json:"lastName"`
 }
 type TransferRequest struct {
-	ToAccount int `json:"toAccount"`
-	Amount int64 `json:"amount"`
+	ToAccount int   `json:"toAccount"`
+	Amount    int64 `json:"amount"`
 }
 
 type Account struct {

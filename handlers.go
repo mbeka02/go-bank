@@ -103,7 +103,6 @@ func (s *APIserver) handleGetAccount(w http.ResponseWriter, r *http.Request) err
 	return writeJSON(w, http.StatusOK, accounts)
 }
 
-
 func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
 	//read request body and store it in params
 	request := createAccountRequest{}
@@ -125,7 +124,7 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *APIserver) handleDeleteAccountByID(w http.ResponseWriter, r *http.Request) error {
-	
+
 	intVar, err := getIDFromRequest(r)
 	if err != nil {
 		return err //errors.New("the id value entered is not a valid number")
@@ -139,17 +138,17 @@ func (s *APIserver) handleDeleteAccountByID(w http.ResponseWriter, r *http.Reque
 }
 
 func (s *APIserver) handleTransfer(w http.ResponseWriter, r *http.Request) error {
-	if(r.Method=="POST"){
-		transferRequest:=new(TransferRequest)
-	if err :=json.NewDecoder(r.Body).Decode(transferRequest);(err !=nil){
-		return err
-	}
-	defer r.Body.Close()
-	return writeJSON(w,http.StatusOK,transferRequest)
+	if r.Method == "POST" {
+		transferRequest := new(TransferRequest)
+		if err := json.NewDecoder(r.Body).Decode(transferRequest); err != nil {
+			return err
+		}
+		defer r.Body.Close()
+		return writeJSON(w, http.StatusOK, transferRequest)
 
 	}
 	return fmt.Errorf("method is not supported : %s", r.Method)
-	
+
 }
 
 func getIDFromRequest(r *http.Request) (int, error) {

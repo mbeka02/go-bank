@@ -51,7 +51,7 @@ func newAPIServer(Addr string, store storage) *APIserver {
 func (s *APIserver) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount))
-	router.HandleFunc("/account/{id}", jwtAuthFunc( makeHTTPHandleFunc(s.handleGetAccountByID)))
+	router.HandleFunc("/account/{id}", jwtAuthFunc( makeHTTPHandleFunc(s.handleGetAccountByID), s.store))
 	router.HandleFunc("/transfer", makeHTTPHandleFunc(s.handleTransfer))
 	log.Printf("Server is listening on port %v", s.Addr)
 	err := http.ListenAndServe(s.Addr, router)
@@ -169,8 +169,8 @@ func getIDFromRequest(r *http.Request) (int, error) {
 func createJWT(account *Account) (string, error) {
 	secret := os.Getenv("jwt_secret")
 	claims := &jwt.MapClaims{
-		"ExpiresAt":      3600,
-		"AccountNumber:": account.Number,
+		"ExpiresAt":      150000,
+		"AccountNumber": account.Number,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))

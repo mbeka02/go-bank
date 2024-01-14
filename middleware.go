@@ -9,17 +9,25 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
+//id 9 -eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBY2NvdW50TnVtYmVyOiI6NjY1OTQ3MCwiRXhwaXJlc0F0IjozNjAwfQ.AZ9bOIYpoDvVLXDxAZpZakDyBdrkDows_Ggp7mFkyAQ
 func jwtAuthFunc(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	//fmt.Println("Using JWT Middleware")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// get token from http req header
 		tokenString := r.Header.Get("x-jwt-token")
-		_, err := validateJWT(tokenString)
+	
+		token, err := validateJWT(tokenString)
 		if err != nil {
 			writeJSON(w, http.StatusForbidden, APIError{Error: "Invalid credentials"})
 			return
 		}
+		if(!token.Valid){
+			writeJSON(w, http.StatusForbidden, APIError{Error: "Invalid credentials"})
+			return
+		}
+		claims:=token.Claims.(jwt.MapClaims)
+		fmt.Println(claims)
 		handlerFunc(w, r)
 	}
 

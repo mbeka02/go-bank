@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 )
 
@@ -49,7 +51,7 @@ func newAPIServer(Addr string, store storage) *APIserver {
 func (s *APIserver) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount))
-	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccountByID))
+	router.HandleFunc("/account/{id}", jwtAuthFunc( makeHTTPHandleFunc(s.handleGetAccountByID)))
 	router.HandleFunc("/transfer", makeHTTPHandleFunc(s.handleTransfer))
 	log.Printf("Server is listening on port %v", s.Addr)
 	err := http.ListenAndServe(s.Addr, router)
@@ -119,6 +121,11 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	if err := s.store.CreateAccount(account); err != nil {
 		return err
 	}
+	token, err := createJWT(account)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("This is the token : %s",token)
 
 	return writeJSON(w, http.StatusCreated, account)
 }
@@ -156,5 +163,16 @@ func getIDFromRequest(r *http.Request) (int, error) {
 	id := mux.Vars(r)["id"]
 	//refactor this , a more useful error value needs to be returned
 	return strconv.Atoi(id)
+
+}
+
+func createJWT(account *Account) (string, error) {
+	secret := os.Getenv("jwt_secret")
+	claims := &jwt.MapClaims{
+		"ExpiresAt":      3600,
+		"AccountNumber:": account.Number,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
 
 }

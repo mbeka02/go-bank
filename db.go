@@ -48,12 +48,12 @@ func NewPostgresStore() (*PostgresStore, error) {
 
 // Yes I know I can just use an ORM but I want to write raw SQL for this project
 func (s *PostgresStore) CreateAccountTable() error {
-	query := `CREATE TABLE IF NOT EXISTS account (
+	query := `CREATE TABLE IF NOT EXISTS account(
 		id serial primary key,
-		LastName varchar(255),
-		FirstName varchar(255),
-		encrypted_password,
-		Number serial,
+		first_name varchar(255),
+		last_name varchar(255),
+		number serial,
+		encrypted_password varchar(100),
 		balance bigint,
 		created_at timestamp
 	); `
@@ -64,15 +64,18 @@ func (s *PostgresStore) CreateAccountTable() error {
 
 func (s *PostgresStore) CreateAccount(acc *Account) error {
 
-	query := `INSERT INTO account 
-	(FirstName,LastName,encrypted_password,Number,balance,created_at) 
-	VALUES ($1,$2,$3,$4,$5)`
-	_, err := s.db.Query(query,
+	query := `insert into account 
+	(first_name,last_name,number,encrypted_password,balance,created_at)
+	values ($1, $2, $3, $4, $5, $6)`
+
+	_, err := s.db.Query(
+		query,
 		acc.FirstName,
 		acc.LastName,
-		acc.EncryptedPassword,
 		acc.Number,
-		acc.Balance, acc.CreatedAt)
+		acc.EncryptedPassword,
+		acc.Balance,
+		acc.CreatedAt)
 
 	if err != nil {
 		return err
@@ -123,7 +126,7 @@ func (s *PostgresStore) GetAccountByID(accId int) (*Account, error) {
 
 }
 func (s *PostgresStore) GetAccountByNumber(accNumber int) (*Account, error) {
-	query := `SELECT * FROM account WHERE Number=$1 `
+	query := `SELECT * FROM account WHERE number=$1 `
 	rows, err := s.db.Query(query, accNumber)
 	if err != nil {
 		return nil, err
@@ -141,7 +144,7 @@ func scanAccountRow(rows *sql.Rows) (*Account, error) {
 	account := new(Account) //or &Account{}
 
 	//copy values in the current row to values pointed at
-	err := rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.Balance, &account.CreatedAt)
+	err := rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number,&account.EncryptedPassword, &account.Balance, &account.CreatedAt)
 	return account, err
 
 }

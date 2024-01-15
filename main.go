@@ -8,17 +8,19 @@ import (
 
 func seedAccount(s storage, fname, lname, pw string) *Account {
 	acc, err := newAccount(fname, lname, pw)
+
 	if err != nil {
 		log.Fatal(err)
 	}
 	if err := s.CreateAccount(acc); err != nil {
-		log.Fatal("Seeding failed")
+		log.Fatal(err)
 	}
 	fmt.Printf("new account details => %+v", acc)
 	return acc
 }
 func seedAccounts(s storage) {
 	seedAccount(s, "Michael", "Mbeka", "myPassword1")
+	seedAccount(s,"Anthony","Mbeka","myPassword2")
 
 }
 

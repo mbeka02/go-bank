@@ -144,7 +144,7 @@ func scanAccountRow(rows *sql.Rows) (*Account, error) {
 	account := new(Account) //or &Account{}
 
 	//copy values in the current row to values pointed at
-	err := rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number,&account.EncryptedPassword, &account.Balance, &account.CreatedAt)
+	err := rows.Scan(&account.ID, &account.FirstName, &account.LastName, &account.Number, &account.EncryptedPassword, &account.Balance, &account.CreatedAt)
 	return account, err
 
 }

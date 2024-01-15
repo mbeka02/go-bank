@@ -23,6 +23,11 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+type LoginResponse struct {
+	Number int64  `json:"number"`
+	Token  string `json:"token"`
+}
+
 type Account struct {
 	ID                int       `json:"id"`
 	FirstName         string    `json:"firstName"`

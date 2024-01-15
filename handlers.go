@@ -78,13 +78,21 @@ func (s *APIserver) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("acc : %v", acc)
+
 	//compare stored hash to the login password
 	if err := bcrypt.CompareHashAndPassword([]byte(acc.EncryptedPassword), []byte(request.Password)); err != nil {
+		return fmt.Errorf("authentication failed")
+	}
+	token, err := createJWT(acc)
+	if err != nil {
 		return err
 	}
+	response := LoginResponse{
+		Number: acc.Number,
+		Token:  token,
+	}
 
-	return writeJSON(w, http.StatusOK, request)
+	return writeJSON(w, http.StatusOK, response)
 }
 
 func (s *APIserver) handleAccount(w http.ResponseWriter, r *http.Request) error {
@@ -150,11 +158,6 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	if err := s.store.CreateAccount(account); err != nil {
 		return err
 	}
-	/*token, err := createJWT(account)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("This is the token : %s", token)*/
 
 	return writeJSON(w, http.StatusCreated, account)
 }

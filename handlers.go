@@ -50,8 +50,9 @@ func newAPIServer(Addr string, store storage) *APIserver {
 }
 func (s *APIserver) Run() {
 	router := mux.NewRouter()
+	router.HandleFunc("/login", makeHTTPHandleFunc(s.handleLogin))
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount))
-	router.HandleFunc("/account/{id}", jwtAuthFunc( makeHTTPHandleFunc(s.handleGetAccountByID), s.store))
+	router.HandleFunc("/account/{id}", jwtAuthFunc(makeHTTPHandleFunc(s.handleGetAccountByID), s.store))
 	router.HandleFunc("/transfer", makeHTTPHandleFunc(s.handleTransfer))
 	log.Printf("Server is listening on port %v", s.Addr)
 	err := http.ListenAndServe(s.Addr, router)
@@ -59,6 +60,21 @@ func (s *APIserver) Run() {
 		log.Fatal("Unable to spin up the server")
 	}
 
+}
+
+func (s *APIserver) handleLogin(w http.ResponseWriter, r *http.Request) error {
+
+	request := LoginRequest{}
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&request); err != nil {
+		return err
+	}
+
+	/*if(request.Number==0||request.Password==""){
+
+
+	}*/
+	return writeJSON(w,http.StatusOK,request)
 }
 
 func (s *APIserver) handleAccount(w http.ResponseWriter, r *http.Request) error {
@@ -80,7 +96,7 @@ func (s *APIserver) handleGetAccountByID(w http.ResponseWriter, r *http.Request)
 	case "GET":
 		intVar, err := getIDFromRequest(r)
 		if err != nil {
-			return err //errors.New("the id value entered is not a valid number")
+			return err
 		}
 		account, err := s.store.GetAccountByID(intVar)
 		if err != nil {
@@ -107,17 +123,17 @@ func (s *APIserver) handleGetAccount(w http.ResponseWriter, r *http.Request) err
 
 func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
 	//read request body and store it in params
-	request := createAccountRequest{}
+	request := CreateAccountRequest{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&request); err != nil {
 		return err
 	}
 
-	if request.FirstName == "" || request.LastName == "" {
-		return errors.New("fields cannot be empty")
+	if request.FirstName == "" || request.LastName == "" || request.Password==""{
+		return errors.New("ensure that you have filled in all the required fields")
 	}
 	//newAccount returns a reference to an account struct that is then passed to createAccount()
-	account := newAccount(request.FirstName, request.LastName)
+	account := newAccount(request.FirstName, request.LastName,request.Password)
 	if err := s.store.CreateAccount(account); err != nil {
 		return err
 	}
@@ -125,7 +141,7 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		return err
 	}
-	fmt.Printf("This is the token : %s",token)
+	fmt.Printf("This is the token : %s", token)
 
 	return writeJSON(w, http.StatusCreated, account)
 }
@@ -169,7 +185,7 @@ func getIDFromRequest(r *http.Request) (int, error) {
 func createJWT(account *Account) (string, error) {
 	secret := os.Getenv("jwt_secret")
 	claims := &jwt.MapClaims{
-		"ExpiresAt":      150000,
+		"ExpiresAt":     150000,
 		"AccountNumber": account.Number,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

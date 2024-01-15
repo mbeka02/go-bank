@@ -84,6 +84,7 @@ func (s *PostgresStore) GetAccounts() ([]*Account, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	accounts := []*Account{}
 	for rows.Next() {
 		account, err := scanAccountRow(rows)

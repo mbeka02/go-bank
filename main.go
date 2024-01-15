@@ -14,8 +14,6 @@ func main() {
 	if err := store.CreateAccountTable(); err != nil {
 		log.Fatal(err)
 	}
-
-	//fmt.Printf("%v",store)
 	server := newAPIServer(":3000", store)
 
 	server.Run()

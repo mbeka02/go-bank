@@ -52,6 +52,7 @@ func (s *PostgresStore) CreateAccountTable() error {
 		id serial primary key,
 		LastName varchar(255),
 		FirstName varchar(255),
+		encrypted_password,
 		Number serial,
 		balance bigint,
 		created_at timestamp
@@ -64,18 +65,19 @@ func (s *PostgresStore) CreateAccountTable() error {
 func (s *PostgresStore) CreateAccount(acc *Account) error {
 
 	query := `INSERT INTO account 
-	(FirstName,LastName,Number,balance,created_at) 
+	(FirstName,LastName,encrypted_password,Number,balance,created_at) 
 	VALUES ($1,$2,$3,$4,$5)`
-	response, err := s.db.Query(query,
+	_, err := s.db.Query(query,
 		acc.FirstName,
 		acc.LastName,
+		acc.EncryptedPassword,
 		acc.Number,
 		acc.Balance, acc.CreatedAt)
 
 	if err != nil {
 		return err
 	}
-	log.Printf("%+v", response)
+
 	return nil
 
 }
@@ -131,7 +133,7 @@ func (s *PostgresStore) GetAccountByNumber(accNumber int) (*Account, error) {
 
 		return scanAccountRow(rows)
 	}
-	return nil, fmt.Errorf("unable to find any record with id : %v", accNumber)	
+	return nil, fmt.Errorf("unable to find any record with Account number : %v", accNumber)
 
 }
 

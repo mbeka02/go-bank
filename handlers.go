@@ -74,15 +74,15 @@ func (s *APIserver) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	if err := decoder.Decode(&request); err != nil {
 		return err
 	}
-	acc,err:= s.store.GetAccountByNumber(int(request.Number))
-	if err!=nil{
+	acc, err := s.store.GetAccountByNumber(int(request.Number))
+	if err != nil {
 		return err
 	}
+	fmt.Printf("acc : %v", acc)
 	//compare stored hash to the login password
-	if err:= bcrypt.CompareHashAndPassword([]byte(acc.EncryptedPassword),[]byte(request.Password)); err!=nil{
-     return err
+	if err := bcrypt.CompareHashAndPassword([]byte(acc.EncryptedPassword), []byte(request.Password)); err != nil {
+		return err
 	}
-
 
 	return writeJSON(w, http.StatusOK, request)
 }
@@ -143,8 +143,8 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 		return errors.New("ensure that you have filled in all the required fields")
 	}
 	//newAccount returns a reference to an account struct that is then passed to createAccount()
-	account,err := newAccount(request.FirstName, request.LastName, request.Password)
-	if(err !=nil){
+	account, err := newAccount(request.FirstName, request.LastName, request.Password)
+	if err != nil {
 		return err
 	}
 	if err := s.store.CreateAccount(account); err != nil {
@@ -205,6 +205,3 @@ func createJWT(account *Account) (string, error) {
 	return token.SignedString([]byte(secret))
 
 }
-
-
-

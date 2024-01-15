@@ -33,11 +33,11 @@ type Account struct {
 	CreatedAt         time.Time `json:"createdAt"`
 }
 
-func newAccount(firstName, LastName, password string) (*Account,error) {
+func newAccount(firstName, LastName, password string) (*Account, error) {
 	encPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
 	if err != nil {
-	return nil,err
+		return nil, err
 	}
 	return &Account{
 		FirstName:         firstName,
@@ -46,5 +46,5 @@ func newAccount(firstName, LastName, password string) (*Account,error) {
 		EncryptedPassword: string(encPass),
 		CreatedAt:         time.Now().UTC(),
 		Balance:           0,
-	},nil
+	}, nil
 }

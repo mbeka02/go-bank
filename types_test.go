@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewAccount(t *testing.T){
-	acc,err:=newAccount("Anthony","Mbeka","testPassword")
-	assert.Nil(t,err)
-	fmt.Printf("%+v\n",acc)
+func TestNewAccount(t *testing.T) {
+	acc, err := newAccount("Anthony", "Mbeka", "testPassword")
+	assert.Nil(t, err)
+	fmt.Printf("%+v\n", acc)
 
 }

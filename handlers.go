@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type APIserver struct {
@@ -63,18 +64,27 @@ func (s *APIserver) Run() {
 }
 
 func (s *APIserver) handleLogin(w http.ResponseWriter, r *http.Request) error {
+	if r.Method != "POST" {
+		return fmt.Errorf("method is not supported : %s", r.Method)
+
+	}
 
 	request := LoginRequest{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&request); err != nil {
 		return err
 	}
+	acc,err:= s.store.GetAccountByNumber(int(request.Number))
+	if err!=nil{
+		return err
+	}
+	//compare stored hash to the login password
+	if err:= bcrypt.CompareHashAndPassword([]byte(acc.EncryptedPassword),[]byte(request.Password)); err!=nil{
+     return err
+	}
 
-	/*if(request.Number==0||request.Password==""){
 
-
-	}*/
-	return writeJSON(w,http.StatusOK,request)
+	return writeJSON(w, http.StatusOK, request)
 }
 
 func (s *APIserver) handleAccount(w http.ResponseWriter, r *http.Request) error {
@@ -129,19 +139,22 @@ func (s *APIserver) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	if request.FirstName == "" || request.LastName == "" || request.Password==""{
+	if request.FirstName == "" || request.LastName == "" || request.Password == "" {
 		return errors.New("ensure that you have filled in all the required fields")
 	}
 	//newAccount returns a reference to an account struct that is then passed to createAccount()
-	account := newAccount(request.FirstName, request.LastName,request.Password)
+	account,err := newAccount(request.FirstName, request.LastName, request.Password)
+	if(err !=nil){
+		return err
+	}
 	if err := s.store.CreateAccount(account); err != nil {
 		return err
 	}
-	token, err := createJWT(account)
+	/*token, err := createJWT(account)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("This is the token : %s", token)
+	fmt.Printf("This is the token : %s", token)*/
 
 	return writeJSON(w, http.StatusCreated, account)
 }
@@ -192,3 +205,6 @@ func createJWT(account *Account) (string, error) {
 	return token.SignedString([]byte(secret))
 
 }
+
+
+

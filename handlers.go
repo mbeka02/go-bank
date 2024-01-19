@@ -25,9 +25,10 @@ type APIError struct {
 // default func signature
 type APIFunc func(http.ResponseWriter, *http.Request) error
 
-// modifies to correct function signature needed by HandleFunc
+// modifies to correct function signature needed by  the router HandleFunc
 func makeHTTPHandleFunc(f APIFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		//if function return a non-nil error value return the error in a JSON response.
 		if err := f(w, r); err != nil {
 			//handle the error
 			writeJSON(w, http.StatusBadRequest, APIError{Error: err.Error()})
